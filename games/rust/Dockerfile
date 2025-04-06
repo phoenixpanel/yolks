@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021 Pterodactyl
+# Copyright (c) 2021 phoenixpanel
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ FROM 		--platform=$TARGETOS/$TARGETARCH debian:bullseye-slim
 
 LABEL       author="Isaac A." maintainer="isaac@isaacs.site"
 
-LABEL       org.opencontainers.image.source="https://github.com/pterodactyl/yolks"
+LABEL       org.opencontainers.image.source="https://github.com/phoenixpanel/yolks"
 LABEL       org.opencontainers.image.licenses=MIT
 
 ENV         DEBIAN_FRONTEND=noninteractive
