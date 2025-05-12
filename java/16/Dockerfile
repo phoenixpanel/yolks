@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021 Matthew Penner
+# Copyright (c) 2021 Phoenix Panel
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@
 FROM        --platform=$TARGETOS/$TARGETARCH eclipse-temurin:16-jdk-focal
 
 
-LABEL       author="Matthew Penner" maintainer="matthew@phoenixpanel.io"
+LABEL       author="Phoenix Panel" maintainer="sneaky@phoenixpanel.io"
 
 LABEL       org.opencontainers.image.source="https://github.com/phoenixpanel/yolks"
 LABEL       org.opencontainers.image.licenses=MIT

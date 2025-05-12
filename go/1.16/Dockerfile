@@ -22,7 +22,7 @@
 
 FROM        --platform=$TARGETOS/$TARGETARCH golang:1.16-alpine
 
-LABEL       author="Matthew Penner" maintainer="matthew@phoenixpanel.io"
+LABEL       author="Matthew Penner" maintainer="sneaky@phoenixpanel.io"
 
 LABEL       org.opencontainers.image.source="https://github.com/phoenixpanel/yolks"
 LABEL       org.opencontainers.image.licenses=MIT
