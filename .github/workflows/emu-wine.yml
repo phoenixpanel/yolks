@@ -48,4 +48,4 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/goover/wine:${{ matrix.tag }}
+            ghcr.io/phoenixpanel/wine:${{ matrix.tag }}
