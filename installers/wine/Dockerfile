@@ -1,4 +1,6 @@
-FROM        debian:bookworm-slim
+FROM        --platform=$TARGETOS/$TARGETARCH debian:bullseye-slim
+
+LABEL       author="Phoenix Panel" maintainer="sneaky@phoenixpanel.io"
 
 LABEL       org.opencontainers.image.source="https://github.com/phoenixpanel/yolks"
 LABEL       org.opencontainers.image.licenses=MIT
