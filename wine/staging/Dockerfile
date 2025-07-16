@@ -1,4 +1,4 @@
-FROM            debian:bookworm-slim
+FROM            --platform=$TARGETOS/$TARGETARCH debian:bookworm-slim
 
 LABEL       author="Phoenix Panel" maintainer="sneaky@phoenixpanel.io"
 
@@ -82,6 +82,7 @@ RUN             apt install -y --install-recommends \
 					winehq-staging \
 					winbind \
 					cabextract
+RUN             rm -rf /var/lib/apt/lists/*
 
 # Set up Winetricks
 RUN	            wget -q -O /usr/sbin/winetricks https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks

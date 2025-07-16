@@ -47,3 +47,4 @@ RUN             apt install -y --install-recommends \
 					winehq-staging \
 					winbind \
 					cabextract
+RUN             rm -rf /var/lib/apt/lists/*

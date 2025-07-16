@@ -20,7 +20,7 @@
 # SOFTWARE.
 #
 
-FROM 		--platform=$TARGETOS/$TARGETARCH debian:bullseye-slim
+FROM 		--platform=$TARGETOS/$TARGETARCH debian:bookworm-slim
 
 LABEL       author="Isaac A." maintainer="isaac@isaacs.site"
 
@@ -32,12 +32,16 @@ ENV         DEBIAN_FRONTEND=noninteractive
 RUN			dpkg --add-architecture i386 \
 			&& apt update \
 			&& apt upgrade -y \
-			&& apt install -y lib32gcc-s1 lib32stdc++6 unzip curl iproute2 tzdata libgdiplus libsdl2-2.0-0:i386 \
-			&& curl -sL https://deb.nodesource.com/setup_14.x | bash - \
+			&& apt install -y lib32gcc-s1 lib32stdc++6 unzip curl iproute2 tzdata libgdiplus libsdl2-2.0-0:i386 ca-certificates gnupg \
+			&& mkdir -p /etc/apt/keyrings \
+			&& curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+			&& echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
+			&& apt update \
 			&& apt install -y nodejs \
 			&& mkdir /node_modules \
 			&& npm install --prefix / ws \
-			&& useradd -d /home/container -m container
+			&& useradd -d /home/container -m container \
+			&& rm -rf /var/lib/apt/lists/*
 
 USER 		container
 ENV  		USER=container HOME=/home/container

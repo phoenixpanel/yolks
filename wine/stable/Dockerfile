@@ -1,4 +1,4 @@
-FROM            debian:bookworm-slim
+FROM            --platform=$TARGETOS/$TARGETARCH debian:bookworm-slim
 
 LABEL       author="Phoenix Panel" maintainer="sneaky@phoenixpanel.io"
 
@@ -77,6 +77,7 @@ RUN             wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.o
 RUN             wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/debian/dists/bookworm/winehq-bookworm.sources
 RUN             apt update
 RUN             apt install --install-recommends winehq-stable wine-binfmt -y
+RUN             rm -rf /var/lib/apt/lists/*
 
 # Set up Winetricks
 RUN	            wget -q -O /usr/sbin/winetricks https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks
