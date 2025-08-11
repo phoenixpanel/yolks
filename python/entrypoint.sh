@@ -1,4 +1,5 @@
 #!/bin/ash
+set -euo pipefail
 
 #
 # Copyright (c) 2021 Phoenix Panel
@@ -22,28 +23,58 @@
 # SOFTWARE.
 #
 
-# Default the TZ environment variable to UTC.
+# Signal handler for graceful shutdown
+shutdown_handler() {
+    echo "Received shutdown signal, stopping server gracefully..."
+    kill -TERM "$child" 2>/dev/null || true
+    wait "$child"
+    exit 0
+}
+trap shutdown_handler TERM INT
+
+# Default the TZ environment variable to UTC
 TZ=${TZ:-UTC}
 export TZ
 
 # Set environment variable that holds the Internal Docker IP
-INTERNAL_IP=$(ip route get 1 | awk '{print $(NF-2);exit}')
+if command -v ip >/dev/null 2>&1; then
+    INTERNAL_IP=$(ip route get 1 2>/dev/null | awk '{print $(NF-2);exit}' || echo "127.0.0.1")
+else
+    INTERNAL_IP="127.0.0.1"
+fi
 export INTERNAL_IP
 
 # Switch to the container's working directory
-cd /home/container || exit 1
+cd /home/container || {
+    echo "ERROR: Failed to change to /home/container directory"
+    exit 1
+}
 
 # Print Python version
-printf "\033[1m\033[33mcontainer@phoenixpanel~ \033[0mpython --version\n"
-python --version
+printf "\033[1m\033[33mcontainer@phoenix~ \033[0m"
+if python --version; then
+    :
+else
+    echo "ERROR: Python is not available"
+    exit 1
+fi
+
+# Validate STARTUP variable exists
+if [ -z "${STARTUP:-}" ]; then
+    echo "ERROR: STARTUP variable is not set"
+    exit 1
+fi
 
 # Convert all of the "{{VARIABLE}}" parts of the command into the expected shell
 # variable format of "${VARIABLE}" before evaluating the string and automatically
 # replacing the values.
-PARSED=$(echo "${STARTUP}" | sed -e 's/{{/${/g' -e 's/}}/}/g' | eval echo "$(cat -)")
+PARSED=$(echo "${STARTUP}" | sed -e 's/{{/${/g' -e 's/}}/}/g')
+PARSED=$(eval echo "\"${PARSED}\"")
 
-# Display the command we're running in the output, and then execute it with the env
-# from the container itself.
-printf "\033[1m\033[33mcontainer@phoenixpanel~ \033[0m%s\n" "$PARSED"
-# shellcheck disable=SC2086
-exec env ${PARSED}
+# Display the command we're running in the output
+printf "\033[1m\033[33mcontainer@phoenix~ \033[0m%s\n" "$PARSED"
+
+# Execute the command with proper signal handling
+eval "$PARSED" &
+child=$!
+wait "$child"

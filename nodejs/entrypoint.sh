@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 #
 # Copyright (c) 2021 Phoenix Panel
@@ -22,18 +23,56 @@
 # SOFTWARE.
 #
 
-cd /home/container
+# Signal handler for graceful shutdown
+shutdown_handler() {
+    echo "Received shutdown signal, stopping server gracefully..."
+    kill -TERM "$child" 2>/dev/null || true
+    wait "$child"
+    exit 0
+}
+trap shutdown_handler SIGTERM SIGINT
 
-# Make internal Docker IP address available to processes.
-INTERNAL_IP=$(ip route get 1 | awk '{print $(NF-2);exit}')
+# Default the TZ environment variable to UTC
+TZ=${TZ:-UTC}
+export TZ
+
+# Switch to the container's working directory
+cd /home/container || {
+    echo "ERROR: Failed to change to /home/container directory"
+    exit 1
+}
+
+# Set environment variable that holds the Internal Docker IP
+if command -v ip >/dev/null 2>&1; then
+    INTERNAL_IP=$(ip route get 1 2>/dev/null | awk '{print $(NF-2);exit}' || echo "127.0.0.1")
+else
+    INTERNAL_IP="127.0.0.1"
+fi
 export INTERNAL_IP
 
-# Print Node.js Version
-node -v
+# Print Node.js version
+printf "\033[1m\033[33mcontainer@phoenix~ \033[0m"
+if node -v; then
+    :
+else
+    echo "ERROR: Node.js is not available"
+    exit 1
+fi
+
+# Validate STARTUP variable exists
+if [[ -z "${STARTUP:-}" ]]; then
+    echo "ERROR: STARTUP variable is not set"
+    exit 1
+fi
 
 # Replace Startup Variables
-MODIFIED_STARTUP=$(echo -e ${STARTUP} | sed -e 's/{{/${/g' -e 's/}}/}/g')
-echo ":/home/container$ ${MODIFIED_STARTUP}"
+PARSED=$(echo "${STARTUP}" | sed -e 's/{{/${/g' -e 's/}}/}/g')
+PARSED=$(eval echo "\"${PARSED}\"")
 
-# Run the Server
-eval ${MODIFIED_STARTUP}
+# Display the command we're running in the output
+printf "\033[1m\033[33mcontainer@phoenix~ \033[0m%s\n" "$PARSED"
+
+# Execute the command with proper signal handling
+eval "$PARSED" &
+child=$!
+wait "$child"
