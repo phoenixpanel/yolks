@@ -29,7 +29,10 @@ LABEL       org.opencontainers.image.licenses=MIT
 
 # Install base packages
 RUN         apk add --update --no-cache ca-certificates curl ffmpeg git openssl sqlite tar tzdata \
-	&& adduser -D -h /home/container container
+    && adduser -D -h /home/container container
+
+COPY      ./../../mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
+RUN       update-ca-certificates
 
 # Copy and install custom certificates
 COPY        ./../../cert/*.crt /usr/local/share/ca-certificates/
