@@ -27,7 +27,7 @@ LABEL       author="Phoenix Panel" maintainer="sneaky@phoenixpanel.io"
 LABEL       org.opencontainers.image.source="https://github.com/phoenixpanel/yolks"
 LABEL       org.opencontainers.image.licenses=MIT
 
-RUN         apk add --update --no-cache ca-certificates curl ffmpeg git openssl sqlite tar tzdata \
+RUN         apk add --update --no-cache bash ca-certificates curl ffmpeg git openssl sqlite tar tzdata \
 	&& adduser -D -h /home/container container \
 	&& npm install -g typescript ts-node
 
