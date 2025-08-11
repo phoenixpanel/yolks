@@ -45,7 +45,7 @@ RUN         apt-get update && apt-get install -y \
             && rm -rf /var/lib/apt/lists/*
 
 # Copy and install custom certificate for system-wide trust
-COPY        ../../cert/mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
+COPY        mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
 RUN         update-ca-certificates
 
 # Configure certificate trust for all tools
