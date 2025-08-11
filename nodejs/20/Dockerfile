@@ -27,19 +27,11 @@ LABEL       author="Phoenix Panel" maintainer="sneaky@phoenixpanel.io"
 LABEL       org.opencontainers.image.source="https://github.com/phoenixpanel/yolks"
 LABEL       org.opencontainers.image.licenses=MIT
 
-# Install base packages
 RUN         apk add --update --no-cache ca-certificates curl ffmpeg git openssl sqlite tar tzdata \
     && adduser -D -h /home/container container
 
-COPY      ./../../mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
+COPY      ../../cert/mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
 RUN       update-ca-certificates
-
-# Copy and install custom certificates
-COPY        ./../../cert/*.crt /usr/local/share/ca-certificates/
-RUN         update-ca-certificates
-
-# Set Node.js to use the system certificate store
-ENV         NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 
 USER        container
 ENV         USER=container HOME=/home/container
