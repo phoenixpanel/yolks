@@ -30,7 +30,7 @@ LABEL       org.opencontainers.image.licenses=MIT
 RUN         apk add --update --no-cache ca-certificates curl ffmpeg git openssl sqlite tar tzdata \
     && adduser -D -h /home/container container
 
-COPY        ./../../cert/mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
+COPY        mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
 RUN         update-ca-certificates
 
 # Set Node.js to use the system certificate store
