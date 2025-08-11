@@ -33,7 +33,6 @@ RUN         apk add --update --no-cache ca-certificates curl ffmpeg git openssl 
 COPY        mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
 RUN         update-ca-certificates
 
-# Set Node.js to use the system certificate store
 ENV         NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 
 USER        container
