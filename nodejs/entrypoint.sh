@@ -65,14 +65,13 @@ if [[ -z "${STARTUP:-}" ]]; then
     exit 1
 fi
 
-# Replace Startup Variables
+# Replace Startup Variables - safer approach
 PARSED=$(echo "${STARTUP}" | sed -e 's/{{/${/g' -e 's/}}/}/g')
-PARSED=$(eval echo "\"${PARSED}\"")
 
 # Display the command we're running in the output
 printf "\033[1m\033[33mcontainer@phoenix~ \033[0m%s\n" "$PARSED"
 
-# Execute the command with proper signal handling
-eval "$PARSED" &
+# Execute the command with proper signal handling using bash
+/bin/bash -c "$PARSED" &
 child=$!
 wait "$child"
