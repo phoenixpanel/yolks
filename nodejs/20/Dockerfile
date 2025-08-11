@@ -30,12 +30,26 @@ LABEL       org.opencontainers.image.licenses=MIT
 RUN         apk add --update --no-cache ca-certificates curl ffmpeg git openssl sqlite tar tzdata \
     && adduser -D -h /home/container container
 
+<<<<<<< Updated upstream
 COPY      ./../mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
 RUN       update-ca-certificates
+=======
+# Copy certificate (build must be run from repository root)
+COPY        cert/mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
+RUN         update-ca-certificates
+
+# Set Node.js to use the system certificate store
+ENV         NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+>>>>>>> Stashed changes
 
 USER        container
 ENV         USER=container HOME=/home/container
 WORKDIR     /home/container
 
+<<<<<<< Updated upstream
 COPY        ./../entrypoint.sh /entrypoint.sh
 CMD         [ "/bin/ash", "/entrypoint.sh" ]
+=======
+COPY        nodejs/entrypoint.sh /entrypoint.sh
+CMD         [ "/bin/ash", "/entrypoint.sh" ]
+>>>>>>> Stashed changes
