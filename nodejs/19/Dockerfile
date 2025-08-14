@@ -20,7 +20,7 @@
 # SOFTWARE.
 #
 
-FROM        --platform=$TARGETOS/$TARGETARCH node:16-alpine
+FROM        --platform=$TARGETOS/$TARGETARCH node:19-alpine
 
 LABEL       author="Phoenix Panel" maintainer="sneaky@phoenixpanel.io"
 

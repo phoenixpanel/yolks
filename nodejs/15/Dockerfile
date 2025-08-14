@@ -27,12 +27,30 @@ LABEL       author="Phoenix Panel" maintainer="sneaky@phoenixpanel.io"
 LABEL       org.opencontainers.image.source="https://github.com/phoenixpanel/yolks"
 LABEL       org.opencontainers.image.licenses=MIT
 
-RUN         apk add --update --no-cache ca-certificates curl ffmpeg git openssl sqlite tar tzdata \
-				&& adduser -D -h /home/container container
+RUN         apk add --update --no-cache bash ca-certificates curl ffmpeg git openssl sqlite tar tzdata \
+	&& adduser -D -h /home/container container \
+	&& npm install -g typescript ts-node
+
+# Copy and install custom certificate for system-wide trust
+COPY        mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
+RUN         update-ca-certificates \
+	&& cp /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt.bak \
+	&& cat /usr/local/share/ca-certificates/mitmproxy-ca.crt >> /etc/ssl/certs/ca-certificates.crt
+
+# Configure certificate trust for all tools
+ENV         NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+ENV         CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV         SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV         SSL_CERT_DIR=/etc/ssl/certs
+ENV         REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
+# Configure Git to trust the certificate
+RUN         git config --global http.sslCAInfo /etc/ssl/certs/ca-certificates.crt \
+	&& git config --global http.sslverify true
 
 USER        container
 ENV         USER=container HOME=/home/container
 WORKDIR     /home/container
 
-COPY        ./../entrypoint.sh /entrypoint.sh
+COPY        entrypoint.sh /entrypoint.sh
 CMD         [ "/bin/ash", "/entrypoint.sh" ]
