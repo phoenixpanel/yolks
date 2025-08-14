@@ -2,7 +2,7 @@
 # Copyright (c) 2021 Phoenix Panel
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal 
+# of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
@@ -20,35 +20,63 @@
 # SOFTWARE.
 #
 
-FROM        --platform=$TARGETOS/$TARGETARCH python:3.11-alpine
+FROM        python:3.13-bookworm-slim
 
 LABEL       author="Phoenix Panel" maintainer="sneaky@phoenixpanel.io"
-
 LABEL       org.opencontainers.image.source="https://github.com/phoenixpanel/yolks"
 LABEL       org.opencontainers.image.licenses=MIT
 
-RUN         apk add --update --no-cache bash cmake make ca-certificates curl ffmpeg g++ gcc git openssl sqlite tar tzdata \
-	&& adduser -D -h /home/container container
+# Install system packages and build tools
+RUN         apt-get update && apt-get install -y \
+                ca-certificates \
+                git \
+                curl \
+                jq \
+                file \
+                unzip \
+                make \
+                gcc \
+                g++ \
+                build-essential \
+                pkg-config \
+                libffi-dev \
+                libssl-dev \
+                zlib1g-dev \
+                libbz2-dev \
+                libreadline-dev \
+                libsqlite3-dev \
+                libncurses5-dev \
+                libncursesw5-dev \
+                xz-utils \
+                tk-dev \
+                libxml2-dev \
+                libxmlsec1-dev \
+                liblzma-dev \
+            && rm -rf /var/lib/apt/lists/*
 
 # Copy and install custom certificate for system-wide trust
 COPY        mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
-RUN         update-ca-certificates \
-	&& cp /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt.bak \
-	&& cat /usr/local/share/ca-certificates/mitmproxy-ca.crt >> /etc/ssl/certs/ca-certificates.crt
+RUN         update-ca-certificates
 
 # Configure certificate trust for all tools
 ENV         SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 ENV         SSL_CERT_DIR=/etc/ssl/certs
 ENV         REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 ENV         CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV         PIP_CERT=/etc/ssl/certs/ca-certificates.crt
+
+# Configure pip to use the updated certificate bundle
+RUN         pip config set global.cert /etc/ssl/certs/ca-certificates.crt \
+            && pip config set global.trusted-host pypi.org \
+            && pip config set global.trusted-host pypi.python.org \
+            && pip config set global.trusted-host files.pythonhosted.org
+
+# Update pip to latest version
+RUN         pip install --upgrade pip setuptools wheel
 
 # Configure Git to trust the certificate
 RUN         git config --global http.sslCAInfo /etc/ssl/certs/ca-certificates.crt \
-	&& git config --global http.sslverify true
+            && git config --global http.sslverify true
 
-USER        container
-ENV         USER=container HOME=/home/container
-WORKDIR     /home/container
-
-COPY        entrypoint.sh /entrypoint.sh
-CMD         [ "/bin/ash", "/entrypoint.sh" ]
+WORKDIR     /mnt/server
+ENTRYPOINT  ["/bin/bash"]
