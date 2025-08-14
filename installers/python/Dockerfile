@@ -20,7 +20,7 @@
 # SOFTWARE.
 #
 
-FROM        python:3.13-bookworm-slim
+FROM        python:3.12-slim-bookworm
 
 LABEL       author="Phoenix Panel" maintainer="sneaky@phoenixpanel.io"
 LABEL       org.opencontainers.image.source="https://github.com/phoenixpanel/yolks"
