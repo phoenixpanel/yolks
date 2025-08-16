@@ -68,4 +68,4 @@ RUN         git config --global http.sslCAInfo /etc/ssl/certs/ca-certificates.cr
             && git config --global http.sslverify true
 
 WORKDIR     /mnt/server
-ENTRYPOINT  ["/bin/bash"]
+CMD         ["/bin/bash"]
