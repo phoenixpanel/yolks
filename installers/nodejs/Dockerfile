@@ -54,3 +54,6 @@ RUN         npm config set cafile /etc/ssl/certs/ca-certificates.crt \
 # Configure Git to trust the certificate
 RUN         git config --global http.sslCAInfo /etc/ssl/certs/ca-certificates.crt \
 				&& git config --global http.sslverify true
+
+WORKDIR     /mnt/server
+ENTRYPOINT  ["/bin/bash"]
