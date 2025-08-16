@@ -20,40 +20,56 @@
 # SOFTWARE.
 #
 
-FROM        --platform=$TARGETOS/$TARGETARCH node:20-bookworm-slim
+FROM node:20-bookworm-slim
 
-LABEL       author="Phoenix Panel" maintainer="sneaky@phoenixpanel.io"
+LABEL author="Phoenix Panel" maintainer="sneaky@phoenixpanel.io"
+LABEL org.opencontainers.image.source="https://github.com/phoenixpanel/yolks"
+LABEL org.opencontainers.image.licenses=MIT
 
-LABEL       org.opencontainers.image.source="https://github.com/phoenixpanel/yolks"
-LABEL       org.opencontainers.image.licenses=MIT
+# Install required packages for Node.js applications
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        git \
+        curl \
+        wget \
+        unzip \
+        tar \
+        jq \
+        build-essential \
+        python3 \
+        python3-pip \
+        python3-dev \
+        make \
+        gcc \
+        g++ \
+        libc6-dev \
+        pkg-config && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-ENV         DEBIAN_FRONTEND=noninteractive
+# Copy and install custom certificate
+COPY mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
+RUN update-ca-certificates
 
-RUN         apt update \
-				&& apt upgrade -y \
-				&& apt -y --no-install-recommends install ca-certificates curl git jq file unzip make gcc g++ python3 python3-dev python3-pip libtool build-essential \
-				&& rm -rf /var/lib/apt/lists/*
+# Set certificate environment variables
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_DIR=/etc/ssl/certs
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
-# Copy and install custom certificate for system-wide trust
-COPY        mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
-RUN         update-ca-certificates
+# Configure npm for certificates and update to latest
+RUN npm config set cafile /etc/ssl/certs/ca-certificates.crt && \
+    npm config set strict-ssl true && \
+    npm install -g npm@latest
 
-# Configure certificate trust for all tools
-ENV         NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
-ENV         CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
-ENV         SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
-ENV         SSL_CERT_DIR=/etc/ssl/certs
-ENV         REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+# Configure git for certificates
+RUN git config --global http.sslCAInfo /etc/ssl/certs/ca-certificates.crt && \
+    git config --global http.sslverify true
 
-# Configure npm to use the updated certificate bundle and update to latest version
-RUN         npm config set cafile /etc/ssl/certs/ca-certificates.crt \
-				&& npm config set strict-ssl true \
-				&& npm config set registry https://registry.npmjs.org/ \
-				&& NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt npm install -g npm@latest
+# Set working directory for PhoenixPanel
+WORKDIR /mnt/server
 
-# Configure Git to trust the certificate
-RUN         git config --global http.sslCAInfo /etc/ssl/certs/ca-certificates.crt \
-				&& git config --global http.sslverify true
-
-WORKDIR     /mnt/server
-ENTRYPOINT  ["/bin/bash"]
+# Use bash as the entry point
+CMD ["/bin/bash"]
