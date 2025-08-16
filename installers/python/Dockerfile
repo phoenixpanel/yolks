@@ -20,63 +20,68 @@
 # SOFTWARE.
 #
 
-FROM        python:3.12-slim-bookworm
+FROM python:3.12-slim-bookworm
 
-LABEL       author="Phoenix Panel" maintainer="sneaky@phoenixpanel.io"
-LABEL       org.opencontainers.image.source="https://github.com/phoenixpanel/yolks"
-LABEL       org.opencontainers.image.licenses=MIT
+LABEL author="Phoenix Panel" maintainer="sneaky@phoenixpanel.io"
+LABEL org.opencontainers.image.source="https://github.com/phoenixpanel/yolks"
+LABEL org.opencontainers.image.licenses=MIT
 
-# Install system packages and build tools
-RUN         apt-get update && apt-get install -y \
-                ca-certificates \
-                git \
-                curl \
-                jq \
-                file \
-                unzip \
-                make \
-                gcc \
-                g++ \
-                build-essential \
-                pkg-config \
-                libffi-dev \
-                libssl-dev \
-                zlib1g-dev \
-                libbz2-dev \
-                libreadline-dev \
-                libsqlite3-dev \
-                libncurses5-dev \
-                libncursesw5-dev \
-                xz-utils \
-                tk-dev \
-                libxml2-dev \
-                libxmlsec1-dev \
-                liblzma-dev \
-            && rm -rf /var/lib/apt/lists/*
+# Install required packages for Python applications
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        git \
+        curl \
+        wget \
+        unzip \
+        tar \
+        jq \
+        build-essential \
+        make \
+        gcc \
+        g++ \
+        libc6-dev \
+        pkg-config \
+        libffi-dev \
+        libssl-dev \
+        zlib1g-dev \
+        libbz2-dev \
+        libreadline-dev \
+        libsqlite3-dev \
+        libncurses5-dev \
+        libncursesw5-dev \
+        xz-utils \
+        tk-dev \
+        libxml2-dev \
+        libxmlsec1-dev \
+        liblzma-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copy and install custom certificate for system-wide trust
-COPY        mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
-RUN         update-ca-certificates
+# Copy and install custom certificate
+COPY mitmproxy-ca.crt /usr/local/share/ca-certificates/mitmproxy-ca.crt
+RUN update-ca-certificates
 
-# Configure certificate trust for all tools
-ENV         SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
-ENV         SSL_CERT_DIR=/etc/ssl/certs
-ENV         REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
-ENV         CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
-ENV         PIP_CERT=/etc/ssl/certs/ca-certificates.crt
+# Set certificate environment variables
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_DIR=/etc/ssl/certs
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV PIP_CERT=/etc/ssl/certs/ca-certificates.crt
 
-# Configure pip to use the updated certificate bundle
-RUN         pip config set global.cert /etc/ssl/certs/ca-certificates.crt \
-            && pip config set global.trusted-host pypi.org \
-            && pip config set global.trusted-host pypi.python.org \
-            && pip config set global.trusted-host files.pythonhosted.org
+# Configure pip for certificates and update to latest
+RUN pip config set global.cert /etc/ssl/certs/ca-certificates.crt && \
+    pip config set global.trusted-host pypi.org && \
+    pip config set global.trusted-host pypi.python.org && \
+    pip config set global.trusted-host files.pythonhosted.org && \
+    pip install --upgrade pip setuptools wheel
 
-# Update pip to latest version
-RUN         pip install --upgrade pip setuptools wheel
+# Configure git for certificates
+RUN git config --global http.sslCAInfo /etc/ssl/certs/ca-certificates.crt && \
+    git config --global http.sslverify true
 
-# Configure Git to trust the certificate
-RUN         git config --global http.sslCAInfo /etc/ssl/certs/ca-certificates.crt \
-            && git config --global http.sslverify true
+# Set working directory for PhoenixPanel
+WORKDIR /mnt/server
 
-WORKDIR     /mnt/server
-ENTRYPOINT  ["/bin/bash"]
+# Use bash as the entry point
+CMD ["/bin/bash"]
